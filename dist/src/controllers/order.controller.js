@@ -1,13 +1,19 @@
-import prisma from '../lib/prisma';
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.cancelOrder = exports.getOrderById = exports.getUserOrders = exports.createOrder = void 0;
+const prisma_1 = __importDefault(require("../lib/prisma"));
 // POST /api/orders
-export const createOrder = async (req, res) => {
+const createOrder = async (req, res) => {
     const userId = req.user.id;
     const { addressId } = req.body;
     if (!addressId) {
         return res.status(400).json({ message: 'addressId is required' });
     }
     // Get cart items
-    const cartItems = await prisma.cart.findMany({
+    const cartItems = await prisma_1.default.cart.findMany({
         where: { userId },
         include: { variant: true },
     });
@@ -29,7 +35,7 @@ export const createOrder = async (req, res) => {
     const shippingCost = subtotal > 1000 ? 0 : 100; // free shipping over R1000
     const total = subtotal + shippingCost;
     // Create order + items + deduct stock in a transaction
-    const order = await prisma.$transaction(async (tx) => {
+    const order = await prisma_1.default.$transaction(async (tx) => {
         const newOrder = await tx.order.create({
             data: {
                 userId,
@@ -62,10 +68,11 @@ export const createOrder = async (req, res) => {
     });
     res.status(201).json(order);
 };
+exports.createOrder = createOrder;
 // GET /api/orders
-export const getUserOrders = async (req, res) => {
+const getUserOrders = async (req, res) => {
     const userId = req.user.id;
-    const orders = await prisma.order.findMany({
+    const orders = await prisma_1.default.order.findMany({
         where: { userId },
         include: {
             items: {
@@ -80,11 +87,12 @@ export const getUserOrders = async (req, res) => {
     });
     res.json(orders);
 };
+exports.getUserOrders = getUserOrders;
 // GET /api/orders/:id
-export const getOrderById = async (req, res) => {
+const getOrderById = async (req, res) => {
     const userId = req.user.id;
     const id = req.params.id;
-    const order = await prisma.order.findFirst({
+    const order = await prisma_1.default.order.findFirst({
         where: { id, userId },
         include: {
             items: {
@@ -100,11 +108,12 @@ export const getOrderById = async (req, res) => {
         return res.status(404).json({ message: 'Order not found' });
     res.json(order);
 };
+exports.getOrderById = getOrderById;
 // PATCH /api/orders/:id/cancel
-export const cancelOrder = async (req, res) => {
+const cancelOrder = async (req, res) => {
     const userId = req.user.id;
     const id = req.params.id;
-    const order = await prisma.order.findFirst({
+    const order = await prisma_1.default.order.findFirst({
         where: { id, userId },
         include: { items: true },
     });
@@ -114,7 +123,7 @@ export const cancelOrder = async (req, res) => {
         return res.status(400).json({ message: `Cannot cancel an order with status ${order.status}` });
     }
     // Refund stock and cancel in a transaction
-    await prisma.$transaction(async (tx) => {
+    await prisma_1.default.$transaction(async (tx) => {
         await tx.order.update({
             where: { id },
             data: { status: 'CANCELLED' },
@@ -128,3 +137,4 @@ export const cancelOrder = async (req, res) => {
     });
     res.json({ message: 'Order cancelled and stock restored' });
 };
+exports.cancelOrder = cancelOrder;

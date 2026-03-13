@@ -1,14 +1,18 @@
-import { supabase } from '../lib/supabase';
-export const requireAuth = async (req, res, next) => {
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.requireAuth = void 0;
+const supabase_1 = require("../lib/supabase");
+const requireAuth = async (req, res, next) => {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
         return res.status(401).json({ message: 'Unauthorized - no token provided' });
     }
     const token = authHeader.split(' ')[1];
-    const { data, error } = await supabase.auth.getUser(token);
+    const { data, error } = await supabase_1.supabase.auth.getUser(token);
     if (error || !data.user) {
         return res.status(401).json({ message: 'Unauthorized - invalid token' });
     }
     req.user = data.user;
     next();
 };
+exports.requireAuth = requireAuth;

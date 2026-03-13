@@ -1,8 +1,10 @@
-import { Router } from 'express';
-import { addAddress, getUserAddresses } from '../controllers/address.controller';
-import { requireAuth } from '../middleware/auth.middleware';
-const router = Router();
-router.use(requireAuth);
-router.post('/', addAddress);
-router.get('/', getUserAddresses);
-export default router;
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const address_controller_1 = require("../controllers/address.controller");
+const auth_middleware_1 = require("../middleware/auth.middleware");
+const router = (0, express_1.Router)();
+router.use(auth_middleware_1.requireAuth);
+router.post('/', address_controller_1.addAddress);
+router.get('/', address_controller_1.getUserAddresses);
+exports.default = router;

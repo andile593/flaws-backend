@@ -1,19 +1,25 @@
-import { supabase } from '../lib/supabase';
-import prisma from '../lib/prisma';
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.getMe = exports.logout = exports.login = exports.register = void 0;
+const supabase_1 = require("../lib/supabase");
+const prisma_1 = __importDefault(require("../lib/prisma"));
 // POST /api/auth/register
-export const register = async (req, res) => {
+const register = async (req, res) => {
     const { email, password, name, phone } = req.body;
     if (!email || !password || !name) {
         return res.status(400).json({ message: 'Email, password and name are required' });
     }
-    const { data, error } = await supabase.auth.admin.createUser({
+    const { data, error } = await supabase_1.supabase.auth.admin.createUser({
         email,
         password,
         email_confirm: true,
     });
     if (error)
         return res.status(400).json({ message: error.message });
-    const user = await prisma.user.create({
+    const user = await prisma_1.default.user.create({
         data: {
             id: data.user.id,
             email,
@@ -23,13 +29,14 @@ export const register = async (req, res) => {
     });
     res.status(201).json({ message: 'Account created', user });
 };
+exports.register = register;
 // POST /api/auth/login
-export const login = async (req, res) => {
+const login = async (req, res) => {
     const { email, password } = req.body;
     if (!email || !password) {
         return res.status(400).json({ message: 'Email and password are required' });
     }
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabase_1.supabase.auth.signInWithPassword({ email, password });
     if (error)
         return res.status(401).json({ message: error.message });
     res.json({
@@ -37,18 +44,21 @@ export const login = async (req, res) => {
         user: data.user,
     });
 };
+exports.login = login;
 // POST /api/auth/logout
-export const logout = async (req, res) => {
+const logout = async (req, res) => {
     const token = req.headers.authorization?.split(' ')[1];
     if (token)
-        await supabase.auth.admin.signOut(token);
+        await supabase_1.supabase.auth.admin.signOut(token);
     res.json({ message: 'Logged out' });
 };
+exports.logout = logout;
 // GET /api/auth/me
-export const getMe = async (req, res) => {
-    const user = await prisma.user.findUnique({
+const getMe = async (req, res) => {
+    const user = await prisma_1.default.user.findUnique({
         where: { id: req.user.id },
         include: { addresses: true },
     });
     res.json(user);
 };
+exports.getMe = getMe;
