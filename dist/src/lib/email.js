@@ -4,7 +4,7 @@ exports.sendOrderConfirmation = sendOrderConfirmation;
 const resend_1 = require("resend");
 const resend = new resend_1.Resend(process.env.RESEND_API_KEY);
 async function sendOrderConfirmation(params) {
-    const { to, customerName, orderId, items, subtotal, shipping, total, address, } = params;
+    const { to, customerName, orderId, items, subtotal, shipping, total, address } = params;
     const orderRef = orderId.slice(0, 8).toUpperCase();
     const itemRows = items.map(item => `
     <tr>
@@ -31,14 +31,12 @@ async function sendOrderConfirmation(params) {
     <body style="margin:0;padding:0;background-color:#0a0a0a;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
       <div style="max-width:600px;margin:0 auto;padding:40px 20px;">
 
-        <!-- Logo -->
         <div style="text-align:center;margin-bottom:40px;">
           <h1 style="margin:0;font-size:28px;font-weight:900;letter-spacing:0.4em;text-transform:uppercase;color:#ffffff;">
             FLAWS
           </h1>
         </div>
 
-        <!-- Header -->
         <div style="border-top:1px solid #1a1a1a;border-bottom:1px solid #1a1a1a;padding:24px 0;margin-bottom:32px;text-align:center;">
           <p style="margin:0 0 8px;font-size:11px;letter-spacing:0.25em;text-transform:uppercase;color:#888888;">
             Order Confirmed
@@ -51,7 +49,6 @@ async function sendOrderConfirmation(params) {
           </p>
         </div>
 
-        <!-- Items -->
         <div style="margin-bottom:32px;">
           <p style="margin:0 0 16px;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:#888888;">
             Your Order
@@ -61,7 +58,6 @@ async function sendOrderConfirmation(params) {
           </table>
         </div>
 
-        <!-- Totals -->
         <div style="border-top:1px solid #1a1a1a;padding-top:16px;margin-bottom:32px;">
           <table style="width:100%;border-collapse:collapse;">
             <tr>
@@ -81,7 +77,6 @@ async function sendOrderConfirmation(params) {
           </table>
         </div>
 
-        <!-- Delivery Address -->
         <div style="background:#111111;border:1px solid #1a1a1a;padding:20px;margin-bottom:32px;">
           <p style="margin:0 0 12px;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:#888888;">
             Delivery Address
@@ -95,7 +90,6 @@ async function sendOrderConfirmation(params) {
           </p>
         </div>
 
-        <!-- CTA -->
         <div style="text-align:center;margin-bottom:40px;">
           <a href="${process.env.FRONTEND_URL}/orders/${orderId}"
              style="display:inline-block;padding:14px 40px;background:#ffffff;color:#0a0a0a;text-decoration:none;font-size:11px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;">
@@ -103,7 +97,6 @@ async function sendOrderConfirmation(params) {
           </a>
         </div>
 
-        <!-- Footer -->
         <div style="border-top:1px solid #1a1a1a;padding-top:24px;text-align:center;">
           <p style="margin:0;font-size:11px;color:#555555;letter-spacing:0.1em;">
             © 2026 FLAWS. South Africa.
@@ -118,7 +111,7 @@ async function sendOrderConfirmation(params) {
     </html>
   `;
     await resend.emails.send({
-        from: `${process.env.RESEND_FROM_NAME || 'FLAWS'} <${process.env.RESEND_FROM_EMAIL || 'orders@resend.dev'}>`,
+        from: process.env.RESEND_FROM_EMAIL || 'FLAWS <orders@yourdomain.com>',
         to,
         subject: `Order Confirmed — #${orderRef}`,
         html,
