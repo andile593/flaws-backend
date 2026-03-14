@@ -26,42 +26,52 @@ async function getProducts(req, res) {
     });
     const rows = products.map(p => {
         const primary = p.images.find(i => i.isPrimary)?.url || p.images[0]?.url;
+        const totalStock = p.variants.reduce((sum, v) => sum + v.stock, 0);
+        const stockColor = totalStock === 0 ? '#ff6b6b' : totalStock <= 10 ? '#ffb347' : '#888';
         return `
-      <tr>
-        <td>${primary ? `<img src="${primary}" class="img-thumb" />` : '<div class="img-thumb" style="background:#1a1a1a;"></div>'}</td>
-        <td>
-          <strong>${p.name}</strong><br/>
-          <span style="color:#888;font-size:0.7rem;">${p.slug}</span>
-        </td>
-        <td style="color:#888;">${p.collection?.name || '—'}</td>
-        <td><span class="badge badge-${p.gender === 'MEN' ? 'confirmed' : 'processing'}">${p.gender}</span></td>
-        <td>${p.variants.length}</td>
-        <td>${p.isFeatured ? '<span class="badge badge-shipped">Featured</span>' : '—'}</td>
-        <td>
-          <div style="display:flex;gap:0.5rem;">
-            <a href="/admin/products/${p.id}/edit" class="btn btn-sm btn-secondary">Edit</a>
-            <form method="POST" action="/admin/products/${p.id}/delete" onsubmit="return confirm('Delete this product?')">
-              <button type="submit" class="btn btn-sm btn-danger">Delete</button>
-            </form>
-          </div>
-        </td>
-      </tr>
-    `;
+    <tr>
+      <td>${primary ? `<img src="${primary}" class="img-thumb" />` : '<div class="img-thumb" style="background:#1a1a1a;"></div>'}</td>
+      <td>
+        <strong>${p.name}</strong><br/>
+        <span style="color:#888;font-size:0.7rem;">${p.slug}</span>
+      </td>
+      <td style="color:#888;">${p.collection?.name || '—'}</td>
+      <td><span class="badge badge-${p.gender === 'MEN' ? 'confirmed' : 'processing'}">${p.gender}</span></td>
+      <td>${p.variants.length}</td>
+      <td style="color:${stockColor};font-weight:600;">${totalStock === 0 ? 'Out of stock' : totalStock}</td>
+      <td>${p.isFeatured ? '<span class="badge badge-shipped">Featured</span>' : '—'}</td>
+      <td>
+        <div style="display:flex;gap:0.5rem;">
+          <a href="/admin/products/${p.id}/edit" class="btn btn-sm btn-secondary">Edit</a>
+          <button type="button" onclick="deleteProduct('${p.id}', '${p.name.replace(/'/g, "\\'")}')" class="btn btn-sm btn-danger">Delete</button>
+        </div>
+      </td>
+    </tr>
+  `;
     }).join('');
     const body = `
-    <div class="page-header">
-      <span class="page-title">Products</span>
-      <a href="/admin/products/new" class="btn btn-primary">+ New Product</a>
-    </div>
-    <div class="card">
-      ${products.length === 0 ? '<div class="empty-state">No products yet</div>' : `
-        <table>
-          <thead><tr><th></th><th>Product</th><th>Collection</th><th>Gender</th><th>Variants</th><th>Featured</th><th></th></tr></thead>
-          <tbody>${rows}</tbody>
-        </table>
-      `}
-    </div>
-  `;
+  <div class="page-header">
+    <span class="page-title">Products</span>
+    <a href="/admin/products/new" class="btn btn-primary">+ New Product</a>
+  </div>
+  <div class="card">
+    ${products.length === 0 ? '<div class="empty-state">No products yet</div>' : `
+      <table>
+        <thead><tr><th></th><th>Product</th><th>Collection</th><th>Gender</th><th>Variants</th><th>Stock</th><th>Featured</th><th></th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    `}
+  </div>
+
+  <script>
+    function deleteProduct(id, name) {
+      if (!confirm('Delete "' + name + '"? This cannot be undone.')) return
+      fetch('/admin/products/' + id + '/delete', { method: 'POST' })
+        .then(() => { window.location.href = '/admin/products' })
+        .catch(() => { alert('Failed to delete product') })
+    }
+  </script>
+`;
     res.send((0, layout_1.layout)('Products', body, 'products'));
 }
 async function getNewProduct(req, res) {
