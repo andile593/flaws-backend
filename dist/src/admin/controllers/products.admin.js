@@ -260,14 +260,16 @@ async function getEditProduct(req, res) {
     const error = req.query.error || '';
     const collectionOptions = collections.map(c => `<option value="${c.id}" ${product.collectionId === c.id ? 'selected' : ''}>${c.name}</option>`).join('');
     const existingImages = product.images.map(img => `
-    <div style="position:relative;display:inline-block;">
-      <img src="${img.url}" class="img-thumb-lg" style="margin-right:8px;" />
-      <form method="POST" action="/admin/products/${product.id}/images/${img.id}/delete" style="display:inline;">
-        <button type="submit" style="position:absolute;top:2px;right:10px;background:#ff6b6b;border:none;color:#fff;width:20px;height:20px;cursor:pointer;font-size:0.7rem;border-radius:50%;" onclick="return confirm('Delete image?')">×</button>
-      </form>
-      ${img.isPrimary ? '<span style="display:block;font-size:0.55rem;color:#888;text-align:center;margin-top:2px;">Primary</span>' : ''}
-    </div>
-  `).join('');
+  <div style="position:relative;display:inline-block;margin-right:8px;margin-bottom:8px;">
+    <img src="${img.url}" class="img-thumb-lg" />
+    <button
+      type="button"
+      onclick="deleteImage('${product.id}', '${img.id}')"
+      style="position:absolute;top:2px;right:2px;background:#ff6b6b;border:none;color:#fff;width:20px;height:20px;cursor:pointer;font-size:0.7rem;border-radius:50%;"
+    >×</button>
+    ${img.isPrimary ? '<span style="display:block;font-size:0.55rem;color:#888;text-align:center;margin-top:2px;">Primary</span>' : ''}
+  </div>
+`).join('');
     const sizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
     const existingVariants = product.variants.map((v, i) => {
         const sizeOptions = sizes.map(s => `<option value="${s}" ${v.size === s ? 'selected' : ''}>${s}</option>`).join('');
@@ -369,6 +371,18 @@ async function getEditProduct(req, res) {
         </div>
       </div>
     </form>
+    <script>
+    function deleteImage(productId, imageId) {
+      if (!confirm('Delete this image?')) return
+      fetch('/admin/products/' + productId + '/images/' + imageId + '/delete', {
+        method: 'POST',
+      }).then(() => {
+        window.location.href = '/admin/products/' + productId + '/edit'
+      }).catch(() => {
+        alert('Failed to delete image')
+      })
+    }
+  </script>
   `;
     res.send((0, layout_1.layout)(`Edit: ${product.name}`, body, 'products'));
 }
