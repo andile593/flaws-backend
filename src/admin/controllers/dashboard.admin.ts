@@ -315,47 +315,73 @@ export async function getDashboard(req: Request, res: Response) {
   `).join('')
 
   const alertsHtml = `
-    <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:1.5rem;">
-      <a href="/admin/orders?status=PENDING" style="
-        text-decoration:none;flex:1;min-width:180px;display:flex;align-items:center;gap:1rem;
-        padding:1rem 1.25rem;background:#111;
-        border:1px solid ${pendingOrderCount > 0 ? '#ffeb3b44' : '#1a1a1a'};
-      ">
-        <div style="width:36px;height:36px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1rem;
-          background:${pendingOrderCount > 0 ? '#2a2a00' : '#1a1a1a'};">⏳</div>
-        <div>
-          <div style="font-size:1.25rem;font-weight:700;color:${pendingOrderCount > 0 ? '#ffeb3b' : '#fff'};">${pendingOrderCount}</div>
-          <div style="font-size:0.6rem;letter-spacing:0.15em;text-transform:uppercase;color:#888;">Pending Orders</div>
-        </div>
-      </a>
+  <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:1.5rem;">
 
-      <a href="/admin/orders?status=PROCESSING" style="
-        text-decoration:none;flex:1;min-width:180px;display:flex;align-items:center;gap:1rem;
-        padding:1rem 1.25rem;background:#111;
-        border:1px solid ${stuckOrders.length > 0 ? '#ff6b6b44' : '#1a1a1a'};
-      ">
-        <div style="width:36px;height:36px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1rem;
-          background:${stuckOrders.length > 0 ? '#1a0000' : '#1a1a1a'};">🔴</div>
-        <div>
-          <div style="font-size:1.25rem;font-weight:700;color:${stuckOrders.length > 0 ? '#ff6b6b' : '#fff'};">${stuckOrders.length}</div>
-          <div style="font-size:0.6rem;letter-spacing:0.15em;text-transform:uppercase;color:#888;">Stuck 48h+ Processing</div>
-        </div>
-      </a>
+    <!-- Pending Orders -->
+    <a href="/admin/orders?status=PENDING" style="
+      text-decoration:none;flex:1;min-width:180px;
+      display:flex;align-items:center;gap:1rem;
+      padding:1.25rem 1.5rem;background:#111;
+      border:1px solid ${pendingOrderCount > 0 ? '#ffeb3b33' : '#1a1a1a'};
+      transition:border 0.2s;
+    ">
+      <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;">
+        <rect width="32" height="32" rx="4" fill="${pendingOrderCount > 0 ? '#2a2a00' : '#1a1a1a'}"/>
+        <path d="M10 8h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H10a2 2 0 0 1-2-2V10a2 2 0 0 1 2-2z" stroke="${pendingOrderCount > 0 ? '#ffeb3b' : '#444'}" stroke-width="1.5" fill="none"/>
+        <path d="M12 13h8M12 16h6M12 19h4" stroke="${pendingOrderCount > 0 ? '#ffeb3b' : '#444'}" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+      <div>
+        <div style="font-size:1.35rem;font-weight:700;line-height:1;color:${pendingOrderCount > 0 ? '#ffeb3b' : '#fff'};">${pendingOrderCount}</div>
+        <div style="font-size:0.6rem;letter-spacing:0.15em;text-transform:uppercase;color:#888;margin-top:0.25rem;">Pending Orders</div>
+      </div>
+    </a>
 
-      <a href="/admin/products" style="
-        text-decoration:none;flex:1;min-width:180px;display:flex;align-items:center;gap:1rem;
-        padding:1rem 1.25rem;background:#111;
-        border:1px solid ${zeroStockVariants.length > 0 ? '#ff6b6b44' : '#1a1a1a'};
-      ">
-        <div style="width:36px;height:36px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1rem;
-          background:${zeroStockVariants.length > 0 ? '#1a0000' : '#1a1a1a'};">📦</div>
-        <div>
-          <div style="font-size:1.25rem;font-weight:700;color:${zeroStockVariants.length > 0 ? '#ff6b6b' : '#fff'};">${zeroStockVariants.length}</div>
-          <div style="font-size:0.6rem;letter-spacing:0.15em;text-transform:uppercase;color:#888;">Out of Stock</div>
-        </div>
-      </a>
-    </div>
-  `
+    <!-- Stuck Processing -->
+    <a href="/admin/orders?status=PROCESSING" style="
+      text-decoration:none;flex:1;min-width:180px;
+      display:flex;align-items:center;gap:1rem;
+      padding:1.25rem 1.5rem;background:#111;
+      border:1px solid ${stuckOrders.length > 0 ? '#ff6b6b33' : '#1a1a1a'};
+      transition:border 0.2s;
+    ">
+      <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;">
+        <rect width="32" height="32" rx="4" fill="${stuckOrders.length > 0 ? '#1a0000' : '#1a1a1a'}"/>
+        <circle cx="16" cy="16" r="7" stroke="${stuckOrders.length > 0 ? '#ff6b6b' : '#444'}" stroke-width="1.5" fill="none"/>
+        <path d="M16 12v4.5l3 1.5" stroke="${stuckOrders.length > 0 ? '#ff6b6b' : '#444'}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M9 9l1.5 1.5M23 9l-1.5 1.5" stroke="${stuckOrders.length > 0 ? '#ff6b6b66' : '#333'}" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+      <div>
+        <div style="font-size:1.35rem;font-weight:700;line-height:1;color:${stuckOrders.length > 0 ? '#ff6b6b' : '#fff'};">${stuckOrders.length}</div>
+        <div style="font-size:0.6rem;letter-spacing:0.15em;text-transform:uppercase;color:#888;margin-top:0.25rem;">Stuck 48h+ Processing</div>
+      </div>
+    </a>
+
+    <!-- Out of Stock -->
+    <a href="/admin/products" style="
+      text-decoration:none;flex:1;min-width:180px;
+      display:flex;align-items:center;gap:1rem;
+      padding:1.25rem 1.5rem;background:#111;
+      border:1px solid ${zeroStockVariants.length > 0 ? '#ff6b6b33' : '#1a1a1a'};
+      transition:border 0.2s;
+    ">
+      <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;">
+        <rect width="32" height="32" rx="4" fill="${zeroStockVariants.length > 0 ? '#1a0000' : '#1a1a1a'}"/>
+        <path d="M8 11l2-3h12l2 3" stroke="${zeroStockVariants.length > 0 ? '#ff6b6b' : '#444'}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        <rect x="8" y="11" width="16" height="12" rx="1" stroke="${zeroStockVariants.length > 0 ? '#ff6b6b' : '#444'}" stroke-width="1.5" fill="none"/>
+        <path d="M13 17h6" stroke="${zeroStockVariants.length > 0 ? '#ff6b6b' : '#444'}" stroke-width="1.5" stroke-linecap="round"/>
+        ${zeroStockVariants.length > 0 ? `
+        <circle cx="24" cy="9" r="4" fill="#ff6b6b"/>
+        <path d="M22.5 9h3M24 7.5v3" stroke="#1a0000" stroke-width="1.5" stroke-linecap="round"/>
+        ` : ''}
+      </svg>
+      <div>
+        <div style="font-size:1.35rem;font-weight:700;line-height:1;color:${zeroStockVariants.length > 0 ? '#ff6b6b' : '#fff'};">${zeroStockVariants.length}</div>
+        <div style="font-size:0.6rem;letter-spacing:0.15em;text-transform:uppercase;color:#888;margin-top:0.25rem;">Out of Stock</div>
+      </div>
+    </a>
+
+  </div>
+`
 
   const topProductRows = topProducts.length === 0
     ? '<div class="empty-state" style="padding:2rem;">No sales data yet</div>'
