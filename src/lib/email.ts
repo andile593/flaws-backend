@@ -155,107 +155,21 @@ export async function sendOrderStatusUpdate(params: {
   status: string
   trackingNumber?: string
 }) {
-
-   console.log('RESEND_API_KEY exists:', !!process.env.RESEND_API_KEY)
+  console.log('RESEND_API_KEY exists:', !!process.env.RESEND_API_KEY)
   console.log('Sending to:', params.to)
-  const { to, customerName, orderId, status, trackingNumber } = params
-  const orderRef = orderId.slice(0, 8).toUpperCase()
+  console.log('From:', process.env.RESEND_FROM_EMAIL)
 
-
-  const statusMessages: Record<string, { title: string; message: string; color: string }> = {
-    CONFIRMED: {
-      title: 'Order Confirmed',
-      message: 'Your order has been confirmed and is being prepared.',
-      color: '#4fc3f7',
-    },
-    PROCESSING: {
-      title: 'Order Being Processed',
-      message: 'Your order is currently being processed and packed.',
-      color: '#ce93d8',
-    },
-    SHIPPED: {
-      title: 'Order Shipped',
-      message: trackingNumber
-        ? `Your order is on its way. Tracking number: ${trackingNumber}`
-        : 'Your order has been shipped and is on its way to you.',
-      color: '#81c784',
-    },
-    DELIVERED: {
-      title: 'Order Delivered',
-      message: 'Your order has been delivered. We hope you love it.',
-      color: '#a5d6a7',
-    },
-    CANCELLED: {
-      title: 'Order Cancelled',
-      message: 'Your order has been cancelled. If you paid, a refund will be processed within 5–10 business days.',
-      color: '#ef9a9a',
-    },
+  try {
+    const result = await resend.emails.send({
+      from: process.env.RESEND_FROM_EMAIL || 'FLAWS <onboarding@resend.dev>',
+      to: params.to,
+      subject: `Order Update — #${params.orderId.slice(0, 8).toUpperCase()}`,
+      html: '<p>Test</p>',
+    })
+    console.log('Resend result:', JSON.stringify(result))
+  } catch (err) {
+    console.error('Resend error:', err)
   }
-
-  const info = statusMessages[status] || {
-    title: `Order ${status}`,
-    message: `Your order status has been updated to ${status}.`,
-    color: '#888888',
-  }
-
-  const html = `
-    <!DOCTYPE html>
-    <html>
-    <head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/></head>
-    <body style="margin:0;padding:0;background-color:#0a0a0a;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
-      <div style="max-width:600px;margin:0 auto;padding:40px 20px;">
-
-        <div style="text-align:center;margin-bottom:40px;">
-          <h1 style="margin:0;font-size:28px;font-weight:900;letter-spacing:0.4em;text-transform:uppercase;color:#ffffff;">FLAWS</h1>
-        </div>
-
-        <div style="border-top:1px solid #1a1a1a;border-bottom:1px solid #1a1a1a;padding:24px 0;margin-bottom:32px;text-align:center;">
-          <div style="display:inline-block;padding:4px 16px;background:${info.color}22;border:1px solid ${info.color}44;margin-bottom:12px;">
-            <span style="font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:${info.color};">${status}</span>
-          </div>
-          <p style="margin:0;font-size:22px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#ffffff;">
-            ${info.title}
-          </p>
-          <p style="margin:8px 0 0;font-size:12px;color:#888888;letter-spacing:0.1em;">
-            Order #${orderRef}
-          </p>
-        </div>
-
-        <div style="background:#111111;border:1px solid #1a1a1a;padding:20px;margin-bottom:32px;">
-          <p style="margin:0;font-size:14px;color:#cccccc;line-height:1.8;">
-            Hi ${customerName.split(' ')[0]}, ${info.message}
-          </p>
-          ${trackingNumber ? `
-          <div style="margin-top:16px;padding-top:16px;border-top:1px solid #1a1a1a;">
-            <p style="margin:0;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:#888888;margin-bottom:8px;">Tracking Number</p>
-            <p style="margin:0;font-size:16px;font-weight:700;color:#ffffff;letter-spacing:0.1em;">${trackingNumber}</p>
-          </div>
-          ` : ''}
-        </div>
-
-        <div style="text-align:center;margin-bottom:40px;">
-          <a href="${process.env.FRONTEND_URL}/orders/${orderId}"
-             style="display:inline-block;padding:14px 40px;background:#ffffff;color:#0a0a0a;text-decoration:none;font-size:11px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;">
-            View Order
-          </a>
-        </div>
-
-        <div style="border-top:1px solid #1a1a1a;padding-top:24px;text-align:center;">
-          <p style="margin:0;font-size:11px;color:#555555;">© 2026 FLAWS. South Africa.</p>
-          <p style="margin:8px 0 0;font-size:11px;color:#555555;">Questions? <a href="mailto:support@flaws.co.za" style="color:#888;">support@flaws.co.za</a></p>
-        </div>
-
-      </div>
-    </body>
-    </html>
-  `
-
-  await resend.emails.send({
-    from: process.env.RESEND_FROM_EMAIL || 'FLAWS <onboarding@resend.dev>',
-    to,
-    subject: `${info.title} — Order #${orderRef}`,
-    html,
-  })
 }
 
 
