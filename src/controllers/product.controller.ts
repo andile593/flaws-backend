@@ -72,3 +72,28 @@ export const deleteProduct = async (req: Request, res: Response) => {
   })
   res.json({ message: 'Product deactivated' })
 }
+
+export const searchProducts = async (req: Request, res: Response) => {
+  const q = req.query.q as string
+  if (!q || q.trim().length < 2) return res.json([])
+
+  const products = await prisma.product.findMany({
+    where: {
+      isActive: true,
+      OR: [
+        { name: { contains: q, mode: 'insensitive' } },
+        { description: { contains: q, mode: 'insensitive' } },
+        { collection: { name: { contains: q, mode: 'insensitive' } } },
+        { variants: { some: { color: { contains: q, mode: 'insensitive' } } } },
+      ],
+    },
+    include: {
+      images: true,
+      variants: { take: 1 },
+      collection: { select: { name: true } },
+    },
+    take: 12,
+  })
+
+  res.json(products)
+}

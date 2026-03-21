@@ -8,4 +8,5 @@ router.get('/:slug', product_controller_1.getProductBySlug);
 router.post('/', product_controller_1.createProduct);
 router.patch('/:id', product_controller_1.updateProduct);
 router.delete('/:id', product_controller_1.deleteProduct);
+router.get('/search', product_controller_1.searchProducts);
 exports.default = router;

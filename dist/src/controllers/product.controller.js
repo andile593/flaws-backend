@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteProduct = exports.updateProduct = exports.createProduct = exports.getProductBySlug = exports.getAllProducts = void 0;
+exports.searchProducts = exports.deleteProduct = exports.updateProduct = exports.createProduct = exports.getProductBySlug = exports.getAllProducts = void 0;
 const prisma_1 = __importDefault(require("../lib/prisma"));
 // GET /api/products
 const getAllProducts = async (req, res) => {
@@ -76,3 +76,27 @@ const deleteProduct = async (req, res) => {
     res.json({ message: 'Product deactivated' });
 };
 exports.deleteProduct = deleteProduct;
+const searchProducts = async (req, res) => {
+    const q = req.query.q;
+    if (!q || q.trim().length < 2)
+        return res.json([]);
+    const products = await prisma_1.default.product.findMany({
+        where: {
+            isActive: true,
+            OR: [
+                { name: { contains: q, mode: 'insensitive' } },
+                { description: { contains: q, mode: 'insensitive' } },
+                { collection: { name: { contains: q, mode: 'insensitive' } } },
+                { variants: { some: { color: { contains: q, mode: 'insensitive' } } } },
+            ],
+        },
+        include: {
+            images: true,
+            variants: { take: 1 },
+            collection: { select: { name: true } },
+        },
+        take: 12,
+    });
+    res.json(products);
+};
+exports.searchProducts = searchProducts;
