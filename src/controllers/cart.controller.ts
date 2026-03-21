@@ -1,16 +1,13 @@
 import { Request, Response } from 'express'
 import prisma from '../lib/prisma'
 
-// GET /api/cart
 export const getCart = async (req: Request, res: Response) => {
   const userId = req.user!.id
 
   const cart = await prisma.cart.findMany({
     where: { userId },
     include: {
-      product: {
-        include: { images: true },
-      },
+      product: { include: { images: true } },
       variant: true,
     },
   })
@@ -23,7 +20,6 @@ export const getCart = async (req: Request, res: Response) => {
   res.json({ items: cart, total })
 }
 
-// POST /api/cart
 export const addToCart = async (req: Request, res: Response) => {
   const userId = req.user!.id
   const { productId, variantId, quantity } = req.body
@@ -32,21 +28,16 @@ export const addToCart = async (req: Request, res: Response) => {
     return res.status(400).json({ message: 'productId, variantId and quantity are required' })
   }
 
-  // Check stock
-  const variant = await prisma.productVariant.findUnique({
-    where: { id: variantId },
-  })
-
+  const variant = await prisma.productVariant.findUnique({ where: { id: variantId } })
   if (!variant) return res.status(404).json({ message: 'Variant not found' })
   if (variant.stock < quantity) {
     return res.status(400).json({ message: `Only ${variant.stock} items in stock` })
   }
 
-  // Upsert — update quantity if already in cart, add if not
   const cartItem = await prisma.cart.upsert({
     where: { userId_variantId: { userId, variantId } },
-    update: { quantity },
-    create: { userId, productId, variantId, quantity },
+    update: { quantity, abandonedEmailSent: false },
+    create: { userId, productId, variantId, quantity, abandonedEmailSent: false },
     include: {
       product: { include: { images: true } },
       variant: true,
@@ -56,7 +47,6 @@ export const addToCart = async (req: Request, res: Response) => {
   res.status(201).json(cartItem)
 }
 
-// PATCH /api/cart/:variantId
 export const updateCartItem = async (req: Request, res: Response) => {
   const userId = req.user!.id
   const variantId = req.params.variantId as string
@@ -68,7 +58,7 @@ export const updateCartItem = async (req: Request, res: Response) => {
 
   const cartItem = await prisma.cart.update({
     where: { userId_variantId: { userId, variantId } },
-    data: { quantity },
+    data: { quantity, abandonedEmailSent: false },
     include: {
       product: { include: { images: true } },
       variant: true,
@@ -78,7 +68,6 @@ export const updateCartItem = async (req: Request, res: Response) => {
   res.json(cartItem)
 }
 
-// DELETE /api/cart/:variantId
 export const removeFromCart = async (req: Request, res: Response) => {
   const userId = req.user!.id
   const variantId = req.params.variantId as string
@@ -90,12 +79,9 @@ export const removeFromCart = async (req: Request, res: Response) => {
   res.json({ message: 'Item removed from cart' })
 }
 
-// DELETE /api/cart
 export const clearCart = async (req: Request, res: Response) => {
   const userId = req.user!.id
-
   await prisma.cart.deleteMany({ where: { userId } })
-
   res.json({ message: 'Cart cleared' })
 }
 
@@ -115,7 +101,7 @@ export const mergeCart = async (req: Request, res: Response) => {
       if (existing) {
         await prisma.cart.update({
           where: { userId_variantId: { userId, variantId: item.variantId } },
-          data: { quantity: { increment: item.quantity } },
+          data: { quantity: { increment: item.quantity }, abandonedEmailSent: false },
         })
       } else {
         await prisma.cart.create({
@@ -124,6 +110,7 @@ export const mergeCart = async (req: Request, res: Response) => {
             productId: item.productId,
             variantId: item.variantId,
             quantity: item.quantity,
+            abandonedEmailSent: false,
           },
         })
       }

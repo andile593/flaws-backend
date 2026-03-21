@@ -11,10 +11,23 @@ import paymentRoutes from './routes/payment.routes'
 import adminRoutes from './admin/routes/admin.routes'
 import contactRoutes from './routes/contact.routes'
 import contentRoutes from './routes/content.routes'
+import { runAbandonedCartJob } from './jobs/abandonedCart'
 import { errorHandler } from './middleware/errorHandler'
 
 const app = express()
 const PORT = process.env.PORT || 5000
+
+
+// Run every hour
+setInterval(() => {
+  runAbandonedCartJob().catch(console.error)
+}, 1000 * 60 * 60)
+
+// Also run once on startup after 5 minutes
+setTimeout(() => {
+  runAbandonedCartJob().catch(console.error)
+}, 1000 * 60 * 5)
+
 
 app.use(cors({
   origin: [
@@ -42,6 +55,7 @@ app.use(session({
     maxAge: 1000 * 60 * 60 * 24 * 7, 
   },
 }))
+
 
 
 app.use('/auth', authRoutes)

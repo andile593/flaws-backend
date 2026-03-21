@@ -2,6 +2,7 @@ import { Request, Response } from 'express'
 import prisma from '../../lib/prisma'
 import { layout } from '../views/layout'
 import { logActivity } from '../lib/logger'
+import { sendOrderStatusUpdate } from '../../lib/email'
 
 export async function getOrders(req: Request, res: Response) {
   const status = req.query.status as string | undefined
@@ -124,17 +125,34 @@ export async function getOrder(req: Request, res: Response) {
           <p style="font-size:0.85rem;margin-bottom:0.25rem;">${order.user.name}</p>
           <p style="font-size:0.75rem;color:#888;">${order.user.email}</p>
         </div>
+
         <div class="card">
           <div style="font-size:0.65rem;letter-spacing:0.2em;text-transform:uppercase;color:#888;margin-bottom:1rem;">Order Total</div>
           <p style="font-size:1.5rem;font-weight:700;">R${Number(order.total).toFixed(2)}</p>
           <p style="font-size:0.7rem;color:#888;margin-top:0.25rem;">${new Date(order.createdAt).toLocaleDateString('en-ZA')}</p>
         </div>
+
         <div class="card">
           <div style="font-size:0.65rem;letter-spacing:0.2em;text-transform:uppercase;color:#888;margin-bottom:1rem;">Update Status</div>
           <form method="POST" action="/admin/orders/${order.id}/status">
-            <select class="form-select" name="status" style="margin-bottom:1rem;">${statusOptions}</select>
+            <div style="margin-bottom:1rem;">
+              <label style="font-size:0.6rem;letter-spacing:0.15em;text-transform:uppercase;color:#888;display:block;margin-bottom:0.5rem;">Status</label>
+              <select class="form-select" name="status" id="status-select">${statusOptions}</select>
+            </div>
+            <div id="tracking-field" style="margin-bottom:1rem;display:none;">
+              <label style="font-size:0.6rem;letter-spacing:0.15em;text-transform:uppercase;color:#888;display:block;margin-bottom:0.5rem;">Tracking Number (optional)</label>
+              <input class="form-input" type="text" name="trackingNumber" placeholder="e.g. SP123456789ZA" />
+            </div>
             <button type="submit" class="btn btn-primary" style="width:100%;">Update Status</button>
+            <p style="font-size:0.6rem;color:#555;text-align:center;margin-top:0.75rem;">Customer will be notified by email</p>
           </form>
+          <script>
+            const sel = document.getElementById('status-select')
+            const tf = document.getElementById('tracking-field')
+            function toggle() { tf.style.display = sel.value === 'SHIPPED' ? 'block' : 'none' }
+            sel.addEventListener('change', toggle)
+            toggle()
+          </script>
         </div>
       </div>
     </div>
@@ -144,13 +162,27 @@ export async function getOrder(req: Request, res: Response) {
 
 export async function updateOrderStatus(req: Request, res: Response) {
   const id = req.params.id as string
-  const { status } = req.body
-  await prisma.order.update({ where: { id }, data: { status } })
-  await logActivity(
-    'ORDER_STATUS_CHANGED',
-    'Order',
-    `Order #${id.slice(0, 8).toUpperCase()} status changed to ${status}`,
-    id
-  )
+  const { status, trackingNumber } = req.body
+
+  const order = await prisma.order.update({
+    where: { id },
+    data: { status },
+    include: { user: true },
+  })
+
+  try {
+    await sendOrderStatusUpdate({
+      to: order.user.email,
+      customerName: order.user.name,
+      orderId: order.id,
+      status,
+      trackingNumber: trackingNumber || undefined,
+    })
+  } catch (emailErr) {
+    console.error('Status email failed:', emailErr)
+  }
+
+  await logActivity('ORDER_STATUS_UPDATED', 'Order', `Order #${id.slice(0, 8).toUpperCase()} status updated to ${status}`, id)
+
   res.redirect(`/admin/orders/${id}`)
 }
