@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.searchProducts = exports.deleteProduct = exports.updateProduct = exports.createProduct = exports.getProductBySlug = exports.getAllProducts = void 0;
+exports.getRelatedProducts = exports.searchProducts = exports.deleteProduct = exports.updateProduct = exports.createProduct = exports.getProductBySlug = exports.getAllProducts = void 0;
 const prisma_1 = __importDefault(require("../lib/prisma"));
 // GET /api/products
 const getAllProducts = async (req, res) => {
@@ -100,3 +100,30 @@ const searchProducts = async (req, res) => {
     res.json(products);
 };
 exports.searchProducts = searchProducts;
+const getRelatedProducts = async (req, res) => {
+    const slug = req.params.slug;
+    const product = await prisma_1.default.product.findUnique({
+        where: { slug },
+        select: { id: true, collectionId: true, gender: true },
+    });
+    if (!product)
+        return res.json([]);
+    const related = await prisma_1.default.product.findMany({
+        where: {
+            isActive: true,
+            id: { not: product.id },
+            OR: [
+                { collectionId: product.collectionId },
+                { gender: product.gender },
+            ],
+        },
+        include: {
+            images: true,
+            variants: { take: 1 },
+            collection: { select: { name: true } },
+        },
+        take: 4,
+    });
+    res.json(related);
+};
+exports.getRelatedProducts = getRelatedProducts;

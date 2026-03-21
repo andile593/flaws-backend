@@ -5,7 +5,8 @@ import {
   createProduct,
   updateProduct,
   deleteProduct,
-  searchProducts
+  searchProducts,
+  getRelatedProducts
 } from '../controllers/product.controller'
 
 const router = Router()
@@ -16,5 +17,6 @@ router.post('/', createProduct)
 router.patch('/:id', updateProduct)
 router.delete('/:id', deleteProduct)
 router.get('/search', searchProducts)
+router.get('/:slug/related', getRelatedProducts)
 
 export default router

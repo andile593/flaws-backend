@@ -97,3 +97,33 @@ export const searchProducts = async (req: Request, res: Response) => {
 
   res.json(products)
 }
+
+export const getRelatedProducts = async (req: Request, res: Response) => {
+  const slug = req.params.slug as string
+
+  const product = await prisma.product.findUnique({
+    where: { slug },
+    select: { id: true, collectionId: true, gender: true },
+  })
+
+  if (!product) return res.json([])
+
+  const related = await prisma.product.findMany({
+    where: {
+      isActive: true,
+      id: { not: product.id },
+      OR: [
+        { collectionId: product.collectionId },
+        { gender: product.gender },
+      ],
+    },
+    include: {
+      images: true,
+      variants: { take: 1 },
+      collection: { select: { name: true } },
+    },
+    take: 4,
+  })
+
+  res.json(related)
+}
