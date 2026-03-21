@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.clearCart = exports.removeFromCart = exports.updateCartItem = exports.addToCart = exports.getCart = void 0;
+exports.mergeCart = exports.clearCart = exports.removeFromCart = exports.updateCartItem = exports.addToCart = exports.getCart = void 0;
 const prisma_1 = __importDefault(require("../lib/prisma"));
 // GET /api/cart
 const getCart = async (req, res) => {
@@ -89,3 +89,40 @@ const clearCart = async (req, res) => {
     res.json({ message: 'Cart cleared' });
 };
 exports.clearCart = clearCart;
+const mergeCart = async (req, res) => {
+    try {
+        const userId = req.user?.id;
+        if (!userId)
+            return res.status(401).json({ message: 'Unauthorized' });
+        const { items } = req.body;
+        if (!items || !Array.isArray(items))
+            return res.json({ success: true });
+        for (const item of items) {
+            const existing = await prisma_1.default.cart.findUnique({
+                where: { userId_variantId: { userId, variantId: item.variantId } },
+            });
+            if (existing) {
+                // Add guest quantity to existing cart quantity
+                await prisma_1.default.cart.update({
+                    where: { userId_variantId: { userId, variantId: item.variantId } },
+                    data: { quantity: existing.quantity + item.quantity },
+                });
+            }
+            else {
+                await prisma_1.default.cart.create({
+                    data: {
+                        userId,
+                        productId: item.productId,
+                        variantId: item.variantId,
+                        quantity: item.quantity,
+                    },
+                });
+            }
+        }
+        res.json({ success: true });
+    }
+    catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+exports.mergeCart = mergeCart;

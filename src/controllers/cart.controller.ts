@@ -98,3 +98,40 @@ export const clearCart = async (req: Request, res: Response) => {
 
   res.json({ message: 'Cart cleared' })
 }
+
+export const mergeCart = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?.id
+    if (!userId) return res.status(401).json({ message: 'Unauthorized' })
+
+    const { items } = req.body
+    if (!items || !Array.isArray(items)) return res.json({ success: true })
+
+    for (const item of items) {
+      const existing = await prisma.cart.findUnique({
+        where: { userId_variantId: { userId, variantId: item.variantId } },
+      })
+
+      if (existing) {
+        // Add guest quantity to existing cart quantity
+        await prisma.cart.update({
+          where: { userId_variantId: { userId, variantId: item.variantId } },
+          data: { quantity: existing.quantity + item.quantity },
+        })
+      } else {
+        await prisma.cart.create({
+          data: {
+            userId,
+            productId: item.productId,
+            variantId: item.variantId,
+            quantity: item.quantity,
+          },
+        })
+      }
+    }
+
+    res.json({ success: true })
+  } catch (err: any) {
+    res.status(500).json({ message: err.message })
+  }
+}
