@@ -19,14 +19,13 @@ const PORT = process.env.PORT || 5000
 
 
 // Run every hour
-// setInterval(() => {
-//   runAbandonedCartJob().catch(console.error)
-// }, 1000 * 60 * 60)
+setTimeout(() => {
+  runAbandonedCartJob().catch(console.error)
 
-// // Also run once on startup after 5 minutes
-// setTimeout(() => {
-//   runAbandonedCartJob().catch(console.error)
-// }, 1000 * 60 * 5)
+  setInterval(() => {
+    runAbandonedCartJob().catch(console.error)
+  }, 1000 * 60 * 60)
+}, 1000 * 60 * 2)
 
 
 app.use(cors({
