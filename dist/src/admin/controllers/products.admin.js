@@ -24,7 +24,6 @@ async function getProducts(req, res) {
         },
         orderBy: { createdAt: 'desc' },
     });
-    console.log('Product IDs:', products.map(p => p.id));
     const rows = products.map(p => {
         const primary = p.images.find(i => i.isPrimary)?.url || p.images[0]?.url;
         const totalStock = p.variants.reduce((sum, v) => sum + v.stock, 0);
@@ -44,7 +43,7 @@ async function getProducts(req, res) {
       <td>
         <div style="display:flex;gap:0.5rem;">
           <a href="/admin/products/${p.id}/edit" class="btn btn-sm btn-secondary">Edit</a>
-          <button type="button" onclick="deleteProduct('${p.id}', '${p.name.replace(/'/g, "\\'")}')" class="btn btn-sm btn-danger">Delete</button>
+          <button type="button" data-id="${p.id}" data-name="${p.name.replace(/'/g, '&#39;')}" onclick="deleteProduct(this)" class="btn btn-sm btn-danger">Delete</button>
         </div>
       </td>
     </tr>
@@ -101,13 +100,11 @@ async function getProducts(req, res) {
 <script>
   let pendingDeleteId = null
 
-  function deleteProduct(id, name) {
-    pendingDeleteId = id
-    document.getElementById('delete-modal-name').textContent = name
-    const modal = document.getElementById('delete-modal')
-    modal.style.display = 'flex'
-  }
-
+function deleteProduct(btn) {
+  pendingDeleteId = btn.getAttribute('data-id')
+  document.getElementById('delete-modal-name').textContent = btn.getAttribute('data-name')
+  document.getElementById('delete-modal').style.display = 'flex'
+}
   function closeModal() {
     pendingDeleteId = null
     document.getElementById('delete-modal').style.display = 'none'
