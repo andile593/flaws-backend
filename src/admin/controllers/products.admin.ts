@@ -14,7 +14,7 @@ export async function getProducts(req: Request, res: Response) {
     },
     orderBy: { createdAt: 'desc' },
   })
-
+console.log('Product IDs:', products.map(p => p.id))
   const rows = products.map(p => {
     const primary = p.images.find(i => i.isPrimary)?.url || p.images[0]?.url
     const totalStock = p.variants.reduce((sum, v) => sum + v.stock, 0)
