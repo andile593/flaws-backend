@@ -5,7 +5,7 @@ import { initializePayment, payfastITN, verifyPayment } from '../controllers/pay
 
 const router = Router()
 
-router.post('/notify', payfastITN)                        // PayFast ITN — no auth
+router.post('/notify', payfastITN)                 
 router.post('/initialize', requireAuth, initializePayment)
 router.get('/verify/:reference', requireAuth, verifyPayment)
 

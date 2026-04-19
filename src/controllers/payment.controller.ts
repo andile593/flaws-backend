@@ -186,7 +186,7 @@ export const initializePayment = async (req: Request, res: Response) => {
       merchant_key: merchantKey,
       return_url: `${process.env.FRONTEND_URL}/payment/success?reference=${reference}`,
       cancel_url: `${process.env.FRONTEND_URL}/checkout?cancelled=true`,
-      notify_url: `${process.env.API_BASE_URL}/api/payment/notify`,
+      notify_url: `${process.env.API_BASE_URL}/payment/notify`,
       name_first: user.name.split(' ')[0] ?? user.name,
       name_last: user.name.split(' ').slice(1).join(' ') || '-',
       email_address: user.email,
@@ -272,20 +272,17 @@ export const verifyPayment = async (req: Request, res: Response) => {
     const userId = req.user?.id
     if (!userId) return res.status(401).json({ message: 'Unauthorized' })
 
-    // ITN may arrive slightly before/after redirect — retry briefly
-    let order = await prisma.order.findFirst({
-      where: { paymentReference: reference },
-    })
-
-    if (!order) {
-      await new Promise(r => setTimeout(r, 3000))
+    // Retry up to 10 seconds in 1s intervals
+    let order = null
+    for (let i = 0; i < 10; i++) {
       order = await prisma.order.findFirst({
         where: { paymentReference: reference },
       })
+      if (order) break
+      await new Promise(r => setTimeout(r, 1000))
     }
 
     if (!order) return res.status(404).json({ message: 'Order not found yet' })
-
     res.json({ orderId: order.id })
   } catch (err: any) {
     res.status(500).json({ message: err.message })
