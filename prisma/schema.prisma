@@ -191,3 +191,13 @@ model SiteContent {
   value     String
   updatedAt DateTime @updatedAt
 }
+
+model WaitlistEntry {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  city      String
+  province  String
+  interests String[] // e.g. ["STREETWEAR", "FOOTWEAR"]
+  createdAt DateTime @default(now())
+}

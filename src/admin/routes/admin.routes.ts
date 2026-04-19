@@ -9,6 +9,7 @@ import { getOrders, getOrder, updateOrderStatus } from '../controllers/orders.ad
 import { getUsers } from '../controllers/users.admin'
 import { getActivityLog } from '../controllers/activity.admin'
 import { getHomepage, postHomepage } from '../controllers/homepage.admin'
+import { adminExportWaitlistCSV, adminGetWaitlist } from '../controllers/waitlist.admin'
 
 const router = Router()
 const upload = multer({ storage: multer.memoryStorage() })
@@ -52,5 +53,8 @@ router.get('/users', getUsers)
 router.get('/activity', getActivityLog)
 router.get('/homepage', getHomepage)
 router.post('/homepage', postHomepage)
+
+router.get('/waitlist', adminGetWaitlist)
+router.get('/waitlist/export', adminExportWaitlistCSV)
 
 export default router

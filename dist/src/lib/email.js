@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.sendOrderConfirmation = sendOrderConfirmation;
 exports.sendOrderStatusUpdate = sendOrderStatusUpdate;
 exports.sendAbandonedCart = sendAbandonedCart;
+exports.sendWaitlistConfirmation = sendWaitlistConfirmation;
 const resend_1 = require("resend");
 function getResend() {
     return new resend_1.Resend(process.env.RESEND_API_KEY);
@@ -279,4 +280,60 @@ async function sendAbandonedCart(params) {
         subject: `You left something behind — Complete your FLAWS order`,
         html,
     });
+}
+async function sendWaitlistConfirmation(params) {
+    const { to, customerName } = params;
+    const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8"/>
+      <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+    </head>
+    <body style="margin:0;padding:0;background-color:#0a0a0a;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+      <div style="max-width:600px;margin:0 auto;padding:40px 20px;">
+ 
+        <div style="text-align:center;margin-bottom:48px;">
+          <h1 style="margin:0;font-size:28px;font-weight:900;letter-spacing:0.4em;text-transform:uppercase;color:#ffffff;">FLAWS</h1>
+        </div>
+ 
+        <div style="border-top:1px solid #1a1a1a;border-bottom:1px solid #1a1a1a;padding:32px 0;margin-bottom:32px;text-align:center;">
+          <p style="margin:0 0 8px;font-size:11px;letter-spacing:0.25em;text-transform:uppercase;color:#888888;">You're in</p>
+          <p style="margin:0;font-size:22px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#ffffff;">
+            Welcome to the list, ${customerName.split(' ')[0]}
+          </p>
+        </div>
+ 
+        <div style="margin-bottom:40px;">
+          <p style="font-size:14px;color:#888888;line-height:1.9;margin:0;">
+            You're now on the FLAWS waitlist. When we launch, you'll be among the first to know — 
+            early access, exclusive drops, and member-only pricing before anyone else.
+          </p>
+          <p style="font-size:14px;color:#888888;line-height:1.9;margin:16px 0 0;">
+            We'll be in touch. Until then, stay tuned.
+          </p>
+        </div>
+ 
+        <div style="border-top:1px solid #1a1a1a;padding-top:24px;text-align:center;">
+          <p style="margin:0;font-size:11px;color:#555555;letter-spacing:0.1em;">© 2026 FLAWS. South Africa.</p>
+          <p style="margin:8px 0 0;font-size:11px;color:#555555;">Questions? Reply to this email.</p>
+        </div>
+ 
+      </div>
+    </body>
+    </html>
+  `;
+    try {
+        const result = await getResend().emails.send({
+            from: getFrom(),
+            to,
+            subject: `You're on the list — FLAWS`,
+            html,
+        });
+        console.log('✅ Waitlist confirmation sent:', result);
+    }
+    catch (err) {
+        console.error('❌ sendWaitlistConfirmation failed:', err);
+        throw err;
+    }
 }

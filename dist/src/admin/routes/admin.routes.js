@@ -14,6 +14,7 @@ const orders_admin_1 = require("../controllers/orders.admin");
 const users_admin_1 = require("../controllers/users.admin");
 const activity_admin_1 = require("../controllers/activity.admin");
 const homepage_admin_1 = require("../controllers/homepage.admin");
+const waitlist_admin_1 = require("../controllers/waitlist.admin");
 const router = (0, express_1.Router)();
 const upload = (0, multer_1.default)({ storage: multer_1.default.memoryStorage() });
 // Auth
@@ -48,4 +49,6 @@ router.get('/users', users_admin_1.getUsers);
 router.get('/activity', activity_admin_1.getActivityLog);
 router.get('/homepage', homepage_admin_1.getHomepage);
 router.post('/homepage', homepage_admin_1.postHomepage);
+router.get('/waitlist', waitlist_admin_1.adminGetWaitlist);
+router.get('/waitlist/export', waitlist_admin_1.adminExportWaitlistCSV);
 exports.default = router;

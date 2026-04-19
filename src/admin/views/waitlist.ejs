@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Waitlist — FLAWS Admin</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #0a0a0a; color: #fff; font-family: 'Helvetica Neue', sans-serif; }
+    .layout { display: flex; min-height: 100vh; }
+    .sidebar { width: 200px; border-right: 1px solid #1a1a1a; padding: 2rem 1.5rem; flex-shrink: 0; }
+    .sidebar-logo { font-size: 1rem; font-weight: 900; letter-spacing: 0.4em; margin-bottom: 2rem; }
+    .sidebar-label { font-size: 0.55rem; letter-spacing: 0.2em; color: #444; text-transform: uppercase; margin-bottom: 1rem; }
+    .sidebar a { display: block; font-size: 0.65rem; letter-spacing: 0.15em; text-transform: uppercase; color: #888; text-decoration: none; padding: 0.5rem 0; }
+    .sidebar a:hover, .sidebar a.active { color: #fff; }
+    .main { flex: 1; padding: 2.5rem; }
+    .page-title { font-size: 0.6rem; letter-spacing: 0.3em; text-transform: uppercase; color: #555; margin-bottom: 0.5rem; }
+    h1 { font-size: 1.25rem; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 2rem; }
+    .stats { display: flex; gap: 1rem; margin-bottom: 2rem; }
+    .stat { border: 1px solid #1a1a1a; padding: 1.25rem 1.5rem; min-width: 140px; }
+    .stat-label { font-size: 0.55rem; letter-spacing: 0.2em; text-transform: uppercase; color: #555; margin-bottom: 0.5rem; }
+    .stat-value { font-size: 1.5rem; font-weight: 700; color: #fff; }
+    table { width: 100%; border-collapse: collapse; }
+    thead tr { border-bottom: 1px solid #1a1a1a; }
+    th { font-size: 0.55rem; letter-spacing: 0.2em; text-transform: uppercase; color: #444; padding: 0.75rem 1rem; text-align: left; font-weight: 400; }
+    td { font-size: 0.75rem; color: #aaa; padding: 1rem; border-bottom: 1px solid #111; vertical-align: top; }
+    td:first-child { color: #fff; }
+    .tag { display: inline-block; padding: 0.2rem 0.6rem; border: 1px solid #222; font-size: 0.55rem; letter-spacing: 0.1em; text-transform: uppercase; color: #666; margin: 0.1rem; }
+    .export-btn { display: inline-block; padding: 0.75rem 1.5rem; border: 1px solid #333; color: #888; font-size: 0.6rem; letter-spacing: 0.15em; text-transform: uppercase; text-decoration: none; margin-bottom: 1.5rem; cursor: pointer; background: none; }
+    .export-btn:hover { border-color: #fff; color: #fff; }
+    .empty { text-align: center; padding: 4rem; color: #333; font-size: 0.75rem; letter-spacing: 0.1em; }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <div class="sidebar">
+      <div class="sidebar-logo">FLAWS</div>
+      <div class="sidebar-label">Admin Panel</div>
+      <div class="sidebar-label" style="margin-top:1.5rem">Overview</div>
+      <a href="/admin">Dashboard</a>
+      <div class="sidebar-label" style="margin-top:1rem">Catalogue</div>
+      <a href="/admin/products">Products</a>
+      <a href="/admin/collections">Collections</a>
+      <div class="sidebar-label" style="margin-top:1rem">Commerce</div>
+      <a href="/admin/orders">Orders</a>
+      <a href="/admin/users">Users</a>
+      <a href="/admin/waitlist" class="active">Waitlist</a>
+      <div class="sidebar-label" style="margin-top:1rem">Content</div>
+      <a href="/admin/homepage">Homepage</a>
+      <a href="/admin/activity">Activity Log</a>
+      <a href="/admin/signout" style="margin-top:2rem;color:#333">Sign Out</a>
+    </div>
+
+    <div class="main">
+      <p class="page-title">Commerce</p>
+      <h1>Waitlist</h1>
+
+      <div class="stats">
+        <div class="stat">
+          <div class="stat-label">Total Signups</div>
+          <div class="stat-value"><%= entries.length %></div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">This Week</div>
+          <div class="stat-value"><%= weekCount %></div>
+        </div>
+      </div>
+
+      <a href="/admin/waitlist/export" class="export-btn">↓ Export CSV</a>
+
+      <% if (entries.length === 0) { %>
+        <div class="empty">No signups yet. Share the link.</div>
+      <% } else { %>
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Location</th>
+              <th>Interests</th>
+              <th>Joined</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% entries.forEach(entry => { %>
+              <tr>
+                <td><%= entry.name %></td>
+                <td style="color:#888"><%= entry.email %></td>
+                <td><%= entry.city %>, <%= entry.province %></td>
+                <td>
+                  <% (entry.interests || []).forEach(interest => { %>
+                    <span class="tag"><%= interest %></span>
+                  <% }) %>
+                </td>
+                <td style="color:#444"><%= new Date(entry.createdAt).toLocaleDateString('en-ZA') %></td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      <% } %>
+    </div>
+  </div>
+</body>
+</html>
